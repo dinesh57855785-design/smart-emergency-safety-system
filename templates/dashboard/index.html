@@ -57,7 +57,13 @@
   <tbody>
     {% for p in police_notifications %}
     <tr>
-      <td>{{ p.police_station.name if p.police_station else 'Unknown' }}</td>
+      <td>
+        {% if p.police_station %}
+          {{ p.police_station.name }}
+        {% else %}
+          Unknown
+        {% endif %}
+      </td>
       <td>{{ p.get_status_display }}</td>
       <td>{{ p.notified_at }}</td>
       <td>{{ p.payload|truncatechars:80 }}</td>
