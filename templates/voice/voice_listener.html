@@ -1,0 +1,11 @@
+{% comment %}This template is included in base.html when the user is authenticated. It loads the voice listener that will fetch the registered phrase and start recognition.{% endcomment %}
+<div id="voice-listener" data-enabled="true"></div>
+<script src="/static/js/voice.js"></script>
+<script>
+  // Initialize the voice listener script with the endpoint paths
+  window.VOICE_CONFIG = window.VOICE_CONFIG || {};
+  window.VOICE_CONFIG.getCommandUrl = '{% url "voice:get_command" %}';
+  window.VOICE_CONFIG.triggerSosUrl = '{% url "sos:trigger_sos" %}';
+  window.VOICE_CONFIG.sosPageUrl = '{% url "sos:sos_page" %}';
+  window.VOICE_CONFIG.listen = {{ user.is_authenticated|yesno:"true,false" }};
+</script>

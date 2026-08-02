@@ -5,6 +5,7 @@ from .forms import ProfileForm
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from voice.models import VoiceCommand
 
 
 @receiver(post_save, sender=User)
@@ -16,7 +17,12 @@ def create_user_profile(sender, instance, created, **kwargs):
 @login_required
 def view_profile(request):
     profile = get_object_or_404(Profile, user=request.user)
-    return render(request, 'profiles/profile.html', {'profile': profile})
+    # try to fetch associated voice command
+    try:
+        vc = VoiceCommand.objects.get(user=request.user)
+    except VoiceCommand.DoesNotExist:
+        vc = None
+    return render(request, 'profiles/profile.html', {'profile': profile, 'voice_command': vc})
 
 
 @login_required

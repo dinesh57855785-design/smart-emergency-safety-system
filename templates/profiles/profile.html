@@ -14,6 +14,12 @@
     <p><strong>Phone:</strong> {{ profile.phone }}</p>
     <p>{{ profile.bio }}</p>
     <a class="btn btn-outline-primary" href="{% url 'profiles:edit_profile' %}">Edit Profile</a>
+    <a class="btn btn-outline-secondary" href="{% url 'voice:register_voice' %}">Register Voice Command</a>
+    {% if voice_command %}
+    <div class="mt-3">
+      <strong>Voice Command:</strong> {{ voice_command.phrase }} {% if not voice_command.active %}<span class="text-muted">(inactive)</span>{% endif %}
+    </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

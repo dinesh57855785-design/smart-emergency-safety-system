@@ -10,6 +10,7 @@ urlpatterns = [
     path('contacts/', include(('contacts.urls', 'contacts'), namespace='contacts')),
     path('sos/', include(('sos.urls', 'sos'), namespace='sos')),
     path('location/', include(('location.urls', 'location'), namespace='location')),
++    path('voice/', include(('voice.urls', 'voice'), namespace='voice')),
     path('', include(('dashboard.urls', 'dashboard'), namespace='dashboard')),
 ]
 

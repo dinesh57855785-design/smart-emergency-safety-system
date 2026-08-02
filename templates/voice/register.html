@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Register Voice Command{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <h2>Register Emergency Voice Command</h2>
+    <p class="text-muted">You can type a phrase or capture it using your microphone. When the spoken phrase is recognized, the app will automatically trigger SOS.</p>
+    <form method="post">{% csrf_token %}
+      {{ form.as_p }}
+      <div class="mb-3">
+        <button id="captureBtn" class="btn btn-outline-primary" type="button">Capture Phrase (Microphone)</button>
+      </div>
+      <button class="btn btn-primary" type="submit">Save Voice Command</button>
+    </form>
+    {% if existing %}
+    <div class="mt-3">
+      <strong>Current phrase:</strong> {{ existing.phrase }}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/voice.js"></script>
+<script>
+(function(){
+  const captureBtn = document.getElementById('captureBtn');
+  const phraseInput = document.querySelector('input[name="phrase"]');
+  if (!captureBtn || !phraseInput) return;
+
+  captureBtn.addEventListener('click', ()=>{
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){
+      alert('Speech recognition not supported in this browser.');
+      return;
+    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.start();
+    captureBtn.textContent = 'Listening...';
+    recognition.onresult = function(e){
+      const text = e.results[0][0].transcript;
+      phraseInput.value = text;
+      captureBtn.textContent = 'Capture Phrase (Microphone)';
+    };
+    recognition.onerror = function(){
+      captureBtn.textContent = 'Capture Phrase (Microphone)';
+      alert('Error capturing voice.');
+    };
+  });
+})();
+</script>
+{% endblock %}
