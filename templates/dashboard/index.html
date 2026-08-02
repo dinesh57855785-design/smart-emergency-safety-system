@@ -15,6 +15,25 @@
   </div>
 </div>
 
+<h3>Active Video Sessions</h3>
+{% if video_sessions %}
+  <ul class="list-group mb-4">
+    {% for vs in video_sessions %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      <div>
+        <strong>{{ vs.room_name }}</strong> (SOS: {{ vs.sos_event.id }})
+      </div>
+      <div>
+        <a class="btn btn-sm btn-primary" href="{% url 'video:join_session' vs.pk %}">Join</a>
+        <a class="btn btn-sm btn-outline-secondary" href="{{ vs.meeting_url }}" target="_blank">Open</a>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No active video sessions.</p>
+{% endif %}
+
 <h3>Recent SMS Notifications</h3>
 <table class="table table-sm">
   <thead><tr><th>To</th><th>Status</th><th>Sent At</th><th>Message</th></tr></thead>

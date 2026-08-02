@@ -1,8 +1,6 @@
 @@
-     'sos',
-     'location',
-     'voice',
      'notifications',
-+    'police',
+     'police',
++    'video',
      'dashboard',
  ]
