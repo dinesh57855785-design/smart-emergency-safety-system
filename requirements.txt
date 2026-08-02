@@ -1,6 +1,5 @@
-@@
- Django>=4.2
- Pillow
- requests
- twilio
-+reportlab
+Django>=4.2
+Pillow
+requests
+twilio
+reportlab

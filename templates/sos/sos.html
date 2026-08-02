@@ -1,22 +1,30 @@
+<!DOCTYPE html>
 {% extends 'base.html' %}
 {% block title %}One-Tap SOS{% endblock %}
 {% block content %}
 <h2>One-Tap SOS</h2>
 <p>Press the button below to send an SOS to your emergency contacts.</p>
-<button id="sosBtn" class="btn btn-danger btn-lg">SEND SOS</button>
+<button id="sosBtn" class="btn btn-danger btn-lg">
+  <span id="sosBtnText">SEND SOS</span>
+  <span id="sosSpinner" class="spinner-border spinner-border-sm ms-2" role="status" style="display:none;" aria-hidden="true"></span>
+</button>
 <button id="stopBtn" class="btn btn-secondary btn-lg" style="display:none;">STOP EMERGENCY</button>
 <div id="status" class="mt-3"></div>
+<div id="meetingLink" class="mt-3"></div>
 {% endblock %}
 {% block scripts %}
 <script>
 const btn = document.getElementById('sosBtn');
 const stopBtn = document.getElementById('stopBtn');
 const status = document.getElementById('status');
+const sosSpinner = document.getElementById('sosSpinner');
+const sosBtnText = document.getElementById('sosBtnText');
+const meetingLink = document.getElementById('meetingLink');
 let sosId = null;
 let updateInterval = null;
 
 btn.addEventListener('click', async ()=>{
-  status.textContent = 'Sending...';
+  setSending(true);
   let lat=null, lon=null;
   if (navigator.geolocation){
     navigator.geolocation.getCurrentPosition(function(pos){
@@ -38,21 +46,32 @@ stopBtn.addEventListener('click', ()=>{
   sosId = null;
 });
 
+function setSending(sent){
+  if(sent){
+    sosSpinner.style.display = 'inline-block';
+    sosBtnText.textContent = 'SENDING...';
+    btn.disabled = true;
+  } else {
+    sosSpinner.style.display = 'none';
+    sosBtnText.textContent = 'SEND SOS';
+    btn.disabled = false;
+  }
+}
+
 function sendSos(lat, lon){
   fetch('{% url "sos:trigger_sos" %}', {
     method: 'POST',
     headers: {'X-CSRFToken': getCookie('csrftoken'), 'Content-Type':'application/x-www-form-urlencoded'},
     body: `lat=${lat||''}&lon=${lon||''}`
   }).then(r=>r.json()).then(j=>{
+    setSending(false);
     if(j.status==='ok'){
       status.textContent='SOS sent';
       sosId = j.id;
-      // kick off initial notifications
-      fetch('{% url "notifications:send_initial" %}',{
-        method:'POST',
-        headers:{'X-CSRFToken': getCookie('csrftoken'), 'Content-Type':'application/x-www-form-urlencoded'},
-        body:`sos_id=${sosId}`
-      });
+      if(j.video_url){
+        meetingLink.innerHTML = `<a class="btn btn-sm btn-primary mt-2" href="${j.video_url}" target="_blank">Join Live Video</a>`;
+        showToast('Live video session created', 'success');
+      }
       // start periodic location updates every 30 seconds
       updateInterval = setInterval(()=>{
         if (!sosId) return;
@@ -69,7 +88,7 @@ function sendSos(lat, lon){
       }, 30000);
       stopBtn.style.display = 'inline-block';
     } else status.textContent='Error';
-  }).catch(()=> status.textContent='Error');
+  }).catch(()=> { setSending(false); status.textContent='Error'; showToast('Failed to send SOS','danger'); });
 }
 
 function getCookie(name) {
