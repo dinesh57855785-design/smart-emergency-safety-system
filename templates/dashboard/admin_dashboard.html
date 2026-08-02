@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="row my-3">
+    <div class="col-12">
+      <h2>Admin Dashboard</h2>
+    </div>
+  </div>
+  <div class="row g-3">
+    <div class="col-sm-6 col-md-3">
+      <div class="card text-white bg-primary">
+        <div class="card-body">
+          <h5 class="card-title">Total Users</h5>
+          <p class="card-text display-6">{{ total_users }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <div class="card text-white bg-secondary">
+        <div class="card-body">
+          <h5 class="card-title">Emergency Contacts</h5>
+          <p class="card-text display-6">{{ total_contacts }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <div class="card text-white bg-danger">
+        <div class="card-body">
+          <h5 class="card-title">Total SOS Requests</h5>
+          <p class="card-text display-6">{{ total_sos }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <div class="card text-white bg-success">
+        <div class="card-body">
+          <h5 class="card-title">Active SOS Requests</h5>
+          <p class="card-text display-6">{{ active_sos }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-3">
+    <div class="col-sm-6 col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <h6>Completed SOS</h6>
+          <p class="display-6">{{ completed_sos }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <h6>Police Notifications</h6>
+          <p class="display-6">{{ police_count }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <h6>SMS Notifications</h6>
+          <p class="display-6">{{ sms_count }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <h6>Video Sessions</h6>
+          <p class="display-6">{{ video_count }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card p-3">
+        <h5>Daily SOS Requests</h5>
+        <canvas id="dailySosChart"></canvas>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card p-3">
+        <h5>Monthly SOS Requests</h5>
+        <canvas id="monthlySosChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card p-3">
+        <h5>Emergency Types</h5>
+        <canvas id="etypeChart"></canvas>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card p-3">
+        <h5>User Registrations</h5>
+        <canvas id="userRegChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-12">
+      <h5>Recent Emergency Activities</h5>
+      <table class="table table-striped">
+        <thead><tr><th>ID</th><th>User</th><th>Message</th><th>Location</th><th>Time</th></tr></thead>
+        <tbody>
+          {% for e in recent_activities %}
+          <tr>
+            <td>{{ e.id }}</td>
+            <td>{{ e.user.username }}</td>
+            <td>{{ e.message|default:'SOS' }}</td>
+            <td>{{ e.latitude }}, {{ e.longitude }}</td>
+            <td>{{ e.created_at }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/static/js/admin_dashboard.js"></script>
+{% endblock %}
