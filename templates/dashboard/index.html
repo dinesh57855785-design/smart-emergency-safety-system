@@ -3,7 +3,7 @@
 {% block content %}
 <h1>Welcome, {{ user.username }}</h1>
 <p>This is a minimal admin dashboard. Use Django admin for more control.</p>
-<div class="row">
+<div class="row mb-4">
   <div class="col-md-4">
     <a class="btn btn-outline-primary" href="{% url 'profiles:view_profile' %}">My Profile</a>
   </div>
@@ -14,4 +14,22 @@
     <a class="btn btn-outline-success" href="{% url 'location:live_location' %}">Share Location</a>
   </div>
 </div>
+
+<h3>Recent SMS Notifications</h3>
+<table class="table table-sm">
+  <thead><tr><th>To</th><th>Status</th><th>Sent At</th><th>Message</th></tr></thead>
+  <tbody>
+    {% for n in notifications %}
+    <tr>
+      <td>{{ n.to_number }}</td>
+      <td>{{ n.get_status_display }}</td>
+      <td>{{ n.sent_at }}</td>
+      <td>{{ n.message|truncatechars:80 }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4">No notifications yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
 {% endblock %}

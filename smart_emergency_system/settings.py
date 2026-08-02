@@ -1,12 +1,9 @@
+# add notifications to INSTALLED_APPS
 @@
- INSTALLED_APPS = [
-@@
-     # local apps
-     'accounts',
-     'profiles',
      'contacts',
      'sos',
      'location',
-+    'voice',
+     'voice',
++    'notifications',
      'dashboard',
  ]
