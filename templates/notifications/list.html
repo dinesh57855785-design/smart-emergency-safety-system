@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<h3 class="mb-3"><i class="bi bi-bell"></i> Notification History</h3>
+<div class="se-card p-4">
+  {% if logs %}
+  <div class="table-responsive">
+    <table class="table table-sm align-middle">
+      <thead><tr><th>Channel</th><th>Recipient</th><th>Subject</th><th>Status</th><th>Time</th></tr></thead>
+      <tbody>
+      {% for log in logs %}
+      <tr>
+        <td><span class="badge bg-{% if log.channel == 'sms' %}info{% elif log.channel == 'email' %}primary{% else %}secondary{% endif %}">{{ log.channel }}</span></td>
+        <td>{{ log.recipient }}</td>
+        <td>{{ log.subject|default:"-"|truncatechars:30 }}</td>
+        <td><span class="badge bg-{% if log.status == 'sent' %}success{% else %}danger{% endif %}">{{ log.status }}</span></td>
+        <td><small>{{ log.created_at|date:"M d, H:i" }}</small></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted mb-0">No notifications sent yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

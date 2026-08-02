@@ -1,13 +1,14 @@
+import uuid
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 
 
-class VoiceCommand(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='voice_command')
-    phrase = models.CharField(max_length=255, help_text='The spoken phrase that triggers SOS')
-    active = models.BooleanField(default=True)
+class VoiceMessage(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="voice_messages")
+    audio_file = models.FileField(upload_to="voice_messages/")
+    transcript = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f'VoiceCommand for {self.user.username}: "{self.phrase}"'
+        return f"Voice {self.id} - {self.user.email}"

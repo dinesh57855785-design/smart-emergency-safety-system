@@ -1,77 +1,94 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-<h1>Welcome, {{ user.username }}</h1>
-<p>This is a minimal admin dashboard. Use Django admin for more control.</p>
-<div class="row mb-4">
-  <div class="col-md-4">
-    <a class="btn btn-outline-primary" href="{% url 'profiles:view_profile' %}">My Profile</a>
-  </div>
-  <div class="col-md-4">
-    <a class="btn btn-outline-danger" href="{% url 'sos:sos_page' %}">Send SOS</a>
-  </div>
-  <div class="col-md-4">
-    <a class="btn btn-outline-success" href="{% url 'location:live_location' %}">Share Location</a>
+<div class="hero mb-4">
+  <div class="row align-items-center">
+    <div class="col-lg-8">
+      <h1>Welcome, {{ user.get_username }}</h1>
+      <p class="mb-0 opacity-75">Your personal emergency safety hub. Stay safe and connected.</p>
+    </div>
+    <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+      <a href="{% url 'sos:page' %}" class="btn btn-light btn-lg fw-bold"><i class="bi bi-exclamation-octagon-fill text-danger"></i> Emergency SOS</a>
+    </div>
   </div>
 </div>
 
-<h3>Active Video Sessions</h3>
-{% if video_sessions %}
-  <ul class="list-group mb-4">
-    {% for vs in video_sessions %}
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-      <div>
-        <strong>{{ vs.room_name }}</strong> (SOS: {{ vs.sos_event.id }})
-      </div>
-      <div>
-        <a class="btn btn-sm btn-primary" href="{% url 'video:join_session' vs.pk %}">Join</a>
-        <a class="btn btn-sm btn-outline-secondary" href="{{ vs.meeting_url }}" target="_blank">Open</a>
-      </div>
-    </li>
-    {% endfor %}
-  </ul>
-{% else %}
-  <p>No active video sessions.</p>
+{% if needs_review %}
+<div class="alert alert-warning d-flex align-items-center justify-content-between">
+  <div><i class="bi bi-info-circle"></i> It has been over 3 months since you reviewed your profile. Please update your weight and emergency details.</div>
+  <a href="{% url 'profiles:edit' %}" class="btn btn-warning btn-sm">Update Profile</a>
+</div>
 {% endif %}
 
-<h3>Recent SMS Notifications</h3>
-<table class="table table-sm">
-  <thead><tr><th>To</th><th>Status</th><th>Sent At</th><th>Message</th></tr></thead>
-  <tbody>
-    {% for n in notifications %}
-    <tr>
-      <td>{{ n.to_number }}</td>
-      <td>{{ n.get_status_display }}</td>
-      <td>{{ n.sent_at }}</td>
-      <td>{{ n.message|truncatechars:80 }}</td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="4">No notifications yet.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+{% if active_event %}
+<div class="alert alert-danger d-flex align-items-center justify-content-between">
+  <div><i class="bi bi-exclamation-triangle-fill"></i> An emergency is currently ACTIVE.</div>
+  <a href="{% url 'sos:page' %}" class="btn btn-light btn-sm">View Emergency</a>
+</div>
+{% endif %}
 
-<h3>Recent Police Notifications</h3>
-<table class="table table-sm">
-  <thead><tr><th>Station</th><th>Status</th><th>Notified At</th><th>Details</th></tr></thead>
-  <tbody>
-    {% for p in police_notifications %}
-    <tr>
-      <td>
-        {% if p.police_station %}
-          {{ p.police_station.name }}
-        {% else %}
-          Unknown
-        {% endif %}
-      </td>
-      <td>{{ p.get_status_display }}</td>
-      <td>{{ p.notified_at }}</td>
-      <td>{{ p.payload|truncatechars:80 }}</td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="4">No police notifications yet.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <a href="{% url 'profiles:view' %}" class="text-decoration-none">
+      <div class="se-stat"><div class="num"><i class="bi bi-person-circle"></i></div><div class="label">My Profile</div></div>
+    </a>
+  </div>
+  <div class="col-6 col-md-3">
+    <a href="{% url 'contacts:list' %}" class="text-decoration-none">
+      <div class="se-stat"><div class="num">{{ contact_count }}</div><div class="label">Trusted Contacts</div></div>
+    </a>
+  </div>
+  <div class="col-6 col-md-3">
+    <a href="{% url 'sos:page' %}" class="text-decoration-none">
+      <div class="se-stat"><div class="num text-danger"><i class="bi bi-exclamation-octagon-fill"></i></div><div class="label">Send SOS</div></div>
+    </a>
+  </div>
+  <div class="col-6 col-md-3">
+    <a href="{% url 'reports:dashboard' %}" class="text-decoration-none">
+      <div class="se-stat"><div class="num">{{ events.count }}</div><div class="label">Recent Emergencies</div></div>
+    </a>
+  </div>
+</div>
 
+<div class="row g-4">
+  <div class="col-md-6">
+    <div class="se-card p-4 h-100">
+      <h5 class="mb-3"><i class="bi bi-clock-history"></i> Recent Emergency History</h5>
+      {% if events %}
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead><tr><th>Date</th><th>Status</th><th>Police</th></tr></thead>
+          <tbody>
+          {% for e in events %}
+            <tr>
+              <td>{{ e.triggered_at|date:"M d, H:i" }}</td>
+              <td><span class="status-badge status-{{ e.status }}">{{ e.status }}</span></td>
+              <td>{{ e.police_station_name|default:"-" }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-muted mb-0">No emergencies recorded yet.</p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="se-card p-4 h-100">
+      <h5 class="mb-3"><i class="bi bi-people"></i> Trusted Contacts</h5>
+      {% if contacts %}
+      <ul class="list-group list-group-flush">
+        {% for c in contacts %}
+        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+          {{ c.name }} <small class="text-muted">{{ c.mobile_number }}</small>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="text-muted mb-0">No trusted contacts yet. <a href="{% url 'contacts:add' %}">Add one</a>.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
 {% endblock %}

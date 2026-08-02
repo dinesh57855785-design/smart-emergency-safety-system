@@ -1,12 +1,8 @@
 from django import forms
-from .models import VoiceCommand
+from .models import VoiceMessage
 
 
-class VoiceCommandForm(forms.ModelForm):
+class VoiceMessageForm(forms.ModelForm):
     class Meta:
-        model = VoiceCommand
-        fields = ['phrase', 'active']
-        widgets = {
-            'phrase': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. help me now'}),
-            'active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        }
+        model = VoiceMessage
+        fields = ["audio_file", "transcript"]

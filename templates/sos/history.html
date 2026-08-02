@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}SOS History{% endblock %}
+{% block content %}
+<h3 class="mb-3"><i class="bi bi-clock-history"></i> SOS Emergency History</h3>
+<div class="se-card p-4">
+  {% if events %}
+  <div class="table-responsive">
+    <table class="table table-sm align-middle">
+      <thead><tr><th>SOS ID</th><th>Triggered</th><th>Location</th><th>Police</th><th>SMS</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      {% for e in events %}
+      <tr>
+        <td><small>{{ e.id|truncatechars:8 }}</small></td>
+        <td>{{ e.triggered_at|date:"M d, H:i" }}</td>
+        <td>{% if e.location_url %}<a href="{{ e.location_url }}" target="_blank">View</a>{% else %}-{% endif %}</td>
+        <td>{{ e.police_station_name|default:"-"|truncatechars:20 }}</td>
+        <td><small>{{ e.sms_status|truncatechars:15 }}</small></td>
+        <td><span class="status-badge status-{{ e.status }}">{{ e.status }}</span></td>
+        <td>
+          {% if e.status == "active" %}
+          <form method="post" action="{% url 'sos:end_sos' e.id %}" class="d-inline">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-danger">End</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="text-muted text-center">No SOS events recorded.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted mb-0">No SOS events recorded yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

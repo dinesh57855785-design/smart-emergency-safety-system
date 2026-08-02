@@ -1,27 +1,32 @@
+import uuid
 from django.db import models
-from django.contrib.auth.models import User
-
-
-def default_room_name():
-    return ''
+from django.conf import settings
 
 
 class VideoSession(models.Model):
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('active', 'Active'),
-        ('ended', 'Ended'),
-    ]
-
-    sos_event = models.ForeignKey('sos.SosEvent', on_delete=models.CASCADE, related_name='video_sessions')
-    room_name = models.CharField(max_length=255)
-    meeting_url = models.URLField(max_length=500)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="video_sessions")
+    room_name = models.CharField(max_length=150)
+    room_url = models.URLField()
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-
-    class Meta:
-        ordering = ['-created_at']
+    ended_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f'VideoSession {self.room_name} ({self.status})'
+        return f"{self.room_name} ({self.user.email})"
+
+
+class OfflineRecording(models.Model):
+    UPLOAD_STATUS = [
+        ("pending", "Pending"),
+        ("uploaded", "Uploaded"),
+        ("failed", "Failed"),
+    ]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="offline_recordings")
+    video_file = models.FileField(upload_to="offline_recordings/")
+    recorded_at = models.DateTimeField(auto_now_add=True)
+    upload_status = models.CharField(max_length=20, choices=UPLOAD_STATUS, default="pending")
+    synced_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Recording {self.id} - {self.user.email}"

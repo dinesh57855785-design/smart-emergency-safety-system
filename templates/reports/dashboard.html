@@ -1,73 +1,40 @@
-{% extends 'base.html' %}
-{% block title %}Reports Dashboard{% endblock %}
+{% extends "base.html" %}
+{% block title %}Emergency Reports{% endblock %}
 {% block content %}
-<div class="row">
-  <div class="col-12">
-    <h2>Reports & Analytics</h2>
-  </div>
-</div>
-<div class="row my-3">
-  <div class="col-md-3 mb-3">
-    <div class="card p-3">
-      <h5>Daily Emergencies (last 30)</h5>
-      <canvas id="dailyChart"></canvas>
-      <a class="btn btn-sm btn-outline-secondary mt-2" href="{% url 'reports:export_csv' %}?report=daily">Export CSV</a>
-      <a class="btn btn-sm btn-outline-secondary mt-2" href="{% url 'reports:export_pdf' %}?report=daily">Export PDF</a>
-    </div>
-  </div>
-  <div class="col-md-3 mb-3">
-    <div class="card p-3">
-      <h5>Weekly Emergencies</h5>
-      <canvas id="weeklyChart"></canvas>
-      <a class="btn btn-sm btn-outline-secondary mt-2" href="{% url 'reports:export_csv' %}?report=weekly">Export CSV</a>
-    </div>
-  </div>
-  <div class="col-md-3 mb-3">
-    <div class="card p-3">
-      <h5>Monthly Emergencies</h5>
-      <canvas id="monthlyChart"></canvas>
-      <a class="btn btn-sm btn-outline-secondary mt-2" href="{% url 'reports:export_csv' %}?report=monthly">Export CSV</a>
-    </div>
-  </div>
-  <div class="col-md-3 mb-3">
-    <div class="card p-3">
-      <h5>User Activity</h5>
-      <canvas id="userChart"></canvas>
-      <a class="btn btn-sm btn-outline-secondary mt-2" href="{% url 'reports:export_csv' %}?report=user_activity">Export CSV</a>
-    </div>
-  </div>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0"><i class="bi bi-file-earmark-bar-graph"></i> Emergency Reports</h3>
+  <a href="{% url 'reports:export' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-download"></i> Export CSV</a>
 </div>
 
-<div class="row my-3">
-  <div class="col-md-4">
-    <div class="card p-3">
-      <h5>Emergency Types</h5>
-      <canvas id="etypeChart"></canvas>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="card p-3">
-      <h5>Police Notifications</h5>
-      <canvas id="policeChart"></canvas>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="card p-3">
-      <h5>SMS Notifications</h5>
-      <canvas id="smsChart"></canvas>
-    </div>
-  </div>
+<div class="row g-3 mb-4">
+  <div class="col-4"><div class="se-stat"><div class="num">{{ total }}</div><div class="label">Total</div></div></div>
+  <div class="col-4"><div class="se-stat"><div class="num text-danger">{{ active }}</div><div class="label">Active</div></div></div>
+  <div class="col-4"><div class="se-stat"><div class="num text-success">{{ resolved }}</div><div class="label">Resolved</div></div></div>
 </div>
 
-<div class="row my-3">
-  <div class="col-12">
-    <h5>Recent Emergencies</h5>
-    <div id="recentList"></div>
+<div class="se-card p-4">
+  <div class="table-responsive">
+    <table class="table table-sm align-middle">
+      <thead><tr><th>SOS ID</th><th>Date</th><th>Time</th><th>Location</th><th>Contacts</th><th>Police</th><th>SMS</th><th>Video</th><th>Voice</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for e in events %}
+      <tr>
+        <td><small>{{ e.id|truncatechars:8 }}</small></td>
+        <td>{{ e.triggered_at|date:"M d, Y" }}</td>
+        <td>{{ e.triggered_at|time:"H:i" }}</td>
+        <td>{% if e.location_url %}<a href="{{ e.location_url }}" target="_blank">Map</a>{% else %}-{% endif %}</td>
+        <td>{{ e.notified_contacts.count }}</td>
+        <td>{{ e.police_station_name|default:"-"|truncatechars:20 }}</td>
+        <td><small>{{ e.sms_status|truncatechars:15 }}</small></td>
+        <td>{{ e.video_status|default:"-" }}</td>
+        <td>{{ e.voice_status|default:"-" }}</td>
+        <td><span class="status-badge status-{{ e.status }}">{{ e.status }}</span></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="10" class="text-muted text-center">No emergency reports yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
   </div>
 </div>
-
-{% endblock %}
-{% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="/static/js/reports.js"></script>
 {% endblock %}

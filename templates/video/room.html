@@ -1,10 +1,15 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block title %}Video Room{% endblock %}
 {% block content %}
-<h2>Live Video Session</h2>
-<p>Meeting: <strong>{{ session.room_name }}</strong></p>
-<p><a class="btn btn-primary" href="{{ session.meeting_url }}" target="_blank">Open in new tab</a></p>
-<div class="ratio ratio-16x9 mt-3">
-  <iframe src="https://meet.jit.si/{{ session.room_name }}" allow="camera; microphone; fullscreen; display-capture" style="border:0;" allowfullscreen></iframe>
+<div class="se-card p-3">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h5 class="mb-0"><i class="bi bi-camera-video"></i> {{ session.room_name }}</h5>
+    <a href="{% url 'video:list' %}" class="btn btn-sm btn-outline-secondary">Back</a>
+  </div>
+  <div class="ratio ratio-16x9">
+    <iframe src="https://{{ jitsi_domain }}/{{ session.room_name }}"
+            allow="camera; microphone; fullscreen; display-capture"
+            style="border:0"></iframe>
+  </div>
 </div>
 {% endblock %}

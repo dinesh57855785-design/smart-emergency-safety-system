@@ -1,34 +1,27 @@
-{% extends 'base.html' %}
-{% block title %}Notify Police{% endblock %}
+{% extends "base.html" %}
+{% block title %}Police Stations{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-8">
-    <h2>Notify Nearest Police Station</h2>
-    <p>Use this page to trigger a manual police notification (for testing).</p>
-    <form id="notifyForm">
-      <input type="hidden" name="sos_id" id="sos_id" value="">
-      <div class="mb-3">
-        <label for="sosIdInput" class="form-label">SOS Event ID (for testing)</label>
-        <input class="form-control" id="sosIdInput" />
-      </div>
-      <button type="button" id="notifyBtn" class="btn btn-danger">Notify Police</button>
-    </form>
-    <div id="result" class="mt-3"></div>
+<h3 class="mb-3"><i class="bi bi-shield-shaded"></i> Nearby Police Stations</h3>
+<p class="text-muted">The system automatically detects the nearest police station during an SOS event using your live GPS location.</p>
+<div class="se-card p-4">
+  {% if stations %}
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>Name</th><th>Address</th><th>Phone</th><th>Coordinates</th></tr></thead>
+      <tbody>
+      {% for s in stations %}
+      <tr>
+        <td>{{ s.name }}</td>
+        <td>{{ s.address|default:"-" }}</td>
+        <td>{{ s.phone|default:"-" }}</td>
+        <td><small>{{ s.latitude|floatformat:4 }}, {{ s.longitude|floatformat:4 }}</small></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
   </div>
+  {% else %}
+  <p class="text-muted mb-0">No police stations cached yet. Stations are detected automatically when an SOS is triggered.</p>
+  {% endif %}
 </div>
-{% endblock %}
-{% block scripts %}
-<script src="/static/js/police.js"></script>
-<script>
-document.getElementById('notifyBtn').addEventListener('click', ()=>{
-  const sosId = document.getElementById('sosIdInput').value;
-  if(!sosId) return alert('Please enter SOS id');
-  fetch('{% url "police:notify" %}',{
-    method:'POST',
-    headers:{'X-CSRFToken': getCookie('csrftoken'),'Content-Type':'application/x-www-form-urlencoded'},
-    body:`sos_id=${sosId}`
-  }).then(r=>r.json()).then(j=>{ document.getElementById('result').textContent = JSON.stringify(j); });
-});
-function getCookie(name) { let cookieValue = null; if (document.cookie && document.cookie !== '') { const cookies = document.cookie.split(';'); for (let i = 0; i < cookies.length; i++) { const cookie = cookies[i].trim(); if (cookie.substring(0, name.length + 1) === (name + '=')) { cookieValue = decodeURIComponent(cookie.substring(name.length + 1)); break; } } } return cookieValue; }
-</script>
 {% endblock %}

@@ -1,24 +1,50 @@
-/* main.js - simple placeholder with toast helper */
-console.log('Smart Emergency System loaded');
+// Shared helpers for the Smart Emergency System frontend.
+window.SE = {
+  getCSRF: function () {
+    const m = document.cookie.match(/csrftoken=([^;]+)/);
+    return m ? m[1] : "";
+  },
+  postJSON: function (url, data) {
+    return fetch(url, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": this.getCSRF(),
+      },
+      body: JSON.stringify(data || {}),
+    }).then(function (r) {
+      if (!r.ok) throw new Error("Request failed: " + r.status);
+      return r.json();
+    });
+  },
+  postForm: function (url, formData) {
+    return fetch(url, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "X-CSRFToken": this.getCSRF() },
+      body: formData,
+    }).then(function (r) {
+      if (!r.ok) throw new Error("Request failed: " + r.status);
+      return r.json();
+    });
+  },
+  toast: function (msg, type) {
+    const cls = type === "error" ? "alert-danger" : type === "success" ? "alert-success" : "alert-info";
+    const el = document.createElement("div");
+    el.className = "alert " + cls + " alert-dismissible fade show";
+    el.role = "alert";
+    el.innerHTML = msg + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+    const target = document.querySelector(".container") || document.body;
+    target.prepend(el);
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 5000);
+  },
+  isOnline: function () { return navigator.onLine; },
+};
 
-function showToast(message, type='info', ttl=5000){
-  const container = document.getElementById('toastContainer');
-  if(!container) return;
-  const toastId = 't'+Math.random().toString(36).substr(2,9);
-  const toastEl = document.createElement('div');
-  toastEl.className = `toast align-items-center text-bg-${type} border-0`;
-  toastEl.setAttribute('role','alert');
-  toastEl.setAttribute('aria-live','assertive');
-  toastEl.setAttribute('aria-atomic','true');
-  toastEl.id = toastId;
-  toastEl.innerHTML = `
-    <div class="d-flex">
-      <div class="toast-body">${message}</div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-    </div>
-  `;
-  container.appendChild(toastEl);
-  const bsToast = new bootstrap.Toast(toastEl, {delay: ttl});
-  bsToast.show();
-  toastEl.addEventListener('hidden.bs.toast', ()=>{ toastEl.remove(); });
-}
+window.addEventListener("online", function () {
+  if (window.SE && window.SE.onOnline) window.SE.onOnline();
+});
+window.addEventListener("offline", function () {
+  window.SE && window.SE.toast("You are offline. Emergency video will be recorded locally.", "error");
+});

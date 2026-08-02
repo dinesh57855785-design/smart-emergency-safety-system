@@ -1,6 +1,10 @@
+"""
+WSGI config for Smart Emergency System.
+"""
 import os
+
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'smart_emergency_system.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smart_emergency_system.settings")
 
 application = get_wsgi_application()

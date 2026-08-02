@@ -1,135 +1,64 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block title %}Admin Dashboard{% endblock %}
 {% block content %}
-<div class="container-fluid">
-  <div class="row my-3">
-    <div class="col-12">
-      <h2>Admin Dashboard</h2>
-    </div>
-  </div>
-  <div class="row g-3">
-    <div class="col-sm-6 col-md-3">
-      <div class="card text-white bg-primary">
-        <div class="card-body">
-          <h5 class="card-title">Total Users</h5>
-          <p class="card-text display-6">{{ total_users }}</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-md-3">
-      <div class="card text-white bg-secondary">
-        <div class="card-body">
-          <h5 class="card-title">Emergency Contacts</h5>
-          <p class="card-text display-6">{{ total_contacts }}</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-md-3">
-      <div class="card text-white bg-danger">
-        <div class="card-body">
-          <h5 class="card-title">Total SOS Requests</h5>
-          <p class="card-text display-6">{{ total_sos }}</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-md-3">
-      <div class="card text-white bg-success">
-        <div class="card-body">
-          <h5 class="card-title">Active SOS Requests</h5>
-          <p class="card-text display-6">{{ active_sos }}</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="row g-3 mt-3">
-    <div class="col-sm-6 col-md-3">
-      <div class="card">
-        <div class="card-body">
-          <h6>Completed SOS</h6>
-          <p class="display-6">{{ completed_sos }}</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-md-3">
-      <div class="card">
-        <div class="card-body">
-          <h6>Police Notifications</h6>
-          <p class="display-6">{{ police_count }}</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-md-3">
-      <div class="card">
-        <div class="card-body">
-          <h6>SMS Notifications</h6>
-          <p class="display-6">{{ sms_count }}</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-md-3">
-      <div class="card">
-        <div class="card-body">
-          <h6>Video Sessions</h6>
-          <p class="display-6">{{ video_count }}</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="row mt-4">
-    <div class="col-md-6">
-      <div class="card p-3">
-        <h5>Daily SOS Requests</h5>
-        <canvas id="dailySosChart"></canvas>
-      </div>
-    </div>
-    <div class="col-md-6">
-      <div class="card p-3">
-        <h5>Monthly SOS Requests</h5>
-        <canvas id="monthlySosChart"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <div class="row mt-4">
-    <div class="col-md-6">
-      <div class="card p-3">
-        <h5>Emergency Types</h5>
-        <canvas id="etypeChart"></canvas>
-      </div>
-    </div>
-    <div class="col-md-6">
-      <div class="card p-3">
-        <h5>User Registrations</h5>
-        <canvas id="userRegChart"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <div class="row mt-4">
-    <div class="col-12">
-      <h5>Recent Emergency Activities</h5>
-      <table class="table table-striped">
-        <thead><tr><th>ID</th><th>User</th><th>Message</th><th>Location</th><th>Time</th></tr></thead>
-        <tbody>
-          {% for e in recent_activities %}
-          <tr>
-            <td>{{ e.id }}</td>
-            <td>{{ e.user.username }}</td>
-            <td>{{ e.message|default:'SOS' }}</td>
-            <td>{{ e.latitude }}, {{ e.longitude }}</td>
-            <td>{{ e.created_at }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3 class="mb-0"><i class="bi bi-gear-fill"></i> Admin Dashboard</h3>
+  <span class="badge bg-primary">System Overview</span>
 </div>
-{% endblock %}
-{% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="/static/js/admin_dashboard.js"></script>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3"><div class="se-stat"><div class="num">{{ total_users }}</div><div class="label">Total Users</div></div></div>
+  <div class="col-6 col-md-3"><div class="se-stat"><div class="num">{{ total_events }}</div><div class="label">Total Emergencies</div></div></div>
+  <div class="col-6 col-md-3"><div class="se-stat"><div class="num text-danger">{{ total_active }}</div><div class="label">Active Now</div></div></div>
+  <div class="col-6 col-md-3"><div class="se-stat"><div class="num">{{ logs.count }}</div><div class="label">Recent Alerts</div></div></div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="se-card p-4">
+      <h5><i class="bi bi-exclamation-octagon"></i> Recent SOS Events</h5>
+      <div class="table-responsive mt-3">
+        <table class="table table-sm align-middle">
+          <thead><tr><th>User</th><th>Time</th><th>Status</th><th>Police</th><th>SMS</th></tr></thead>
+          <tbody>
+          {% for e in events %}
+          <tr>
+            <td>{{ e.user.email }}</td>
+            <td>{{ e.triggered_at|date:"M d, H:i" }}</td>
+            <td><span class="status-badge status-{{ e.status }}">{{ e.status }}</span></td>
+            <td>{{ e.police_station_name|default:"-" }}</td>
+            <td><small>{{ e.sms_status }}</small></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-muted">No events.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="se-card p-4 mb-4">
+      <h5><i class="bi bi-people"></i> Registered Users</h5>
+      <ul class="list-group list-group-flush mt-2">
+        {% for u in users|slice:":15" %}
+        <li class="list-group-item d-flex justify-content-between px-0">
+          {{ u.email }} <small class="text-muted">{{ u.date_joined|date:"M d" }}</small>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="se-card p-4">
+      <h5><i class="bi bi-bell"></i> Recent Notifications</h5>
+      <ul class="list-group list-group-flush mt-2">
+        {% for log in logs|slice:":10" %}
+        <li class="list-group-item d-flex justify-content-between px-0">
+          <span>{{ log.recipient }}</span>
+          <span class="badge bg-{% if log.status == 'sent' %}success{% else %}danger{% endif %}">{{ log.channel }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
 {% endblock %}

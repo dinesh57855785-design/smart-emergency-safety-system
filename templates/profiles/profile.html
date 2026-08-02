@@ -1,25 +1,41 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block title %}My Profile{% endblock %}
 {% block content %}
-<div class="row">
-  <div class="col-md-4">
-    {% if profile.photo %}
-    <img src="{{ profile.photo.url }}" class="img-fluid rounded" alt="Profile">
-    {% else %}
-    <div class="bg-secondary text-white p-5 text-center">No photo</div>
-    {% endif %}
-  </div>
-  <div class="col-md-8">
-    <h3>{{ profile.user.username }}</h3>
-    <p><strong>Phone:</strong> {{ profile.phone }}</p>
-    <p>{{ profile.bio }}</p>
-    <a class="btn btn-outline-primary" href="{% url 'profiles:edit_profile' %}">Edit Profile</a>
-    <a class="btn btn-outline-secondary" href="{% url 'voice:register_voice' %}">Register Voice Command</a>
-    {% if voice_command %}
-    <div class="mt-3">
-      <strong>Voice Command:</strong> {{ voice_command.phrase }} {% if not voice_command.active %}<span class="text-muted">(inactive)</span>{% endif %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="se-card p-4 p-md-5">
+      <div class="d-flex align-items-center mb-4">
+        {% if profile.photo %}
+        <img src="{{ profile.photo.url }}" class="rounded-circle me-3" width="80" height="80" style="object-fit:cover">
+        {% else %}
+        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width:80px;height:80px;font-size:2rem;"><i class="bi bi-person"></i></div>
+        {% endif %}
+        <div>
+          <h3 class="mb-0">{{ profile.full_name|default:user.email }}</h3>
+          <small class="text-muted">{{ user.email }}</small>
+        </div>
+        <a href="{% url 'profiles:edit' %}" class="btn btn-outline-primary ms-auto"><i class="bi bi-pencil"></i> Edit</a>
+      </div>
+
+      {% if needs_review %}
+      <div class="alert alert-warning d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-info-circle"></i> Please review your profile (weight/emergency details) — it's been over 3 months.</span>
+        <form method="post" action="{% url 'profiles:mark_reviewed' %}">
+          {% csrf_token %}
+          <button class="btn btn-sm btn-warning">Mark as Reviewed</button>
+        </form>
+      </div>
+      {% endif %}
+
+      <div class="row g-3">
+        <div class="col-md-6"><label class="text-muted d-block">Mobile</label><span>{{ profile.mobile_number|default:"-" }}</span></div>
+        <div class="col-md-6"><label class="text-muted d-block">Date of Birth</label><span>{{ profile.date_of_birth|default:"-" }}</span></div>
+        <div class="col-md-6"><label class="text-muted d-block">Blood Group</label><span>{{ profile.blood_group|default:"-" }}</span></div>
+        <div class="col-md-6"><label class="text-muted d-block">Height</label><span>{{ profile.height|default:"-" }}</span></div>
+        <div class="col-md-6"><label class="text-muted d-block">Weight</label><span>{{ profile.weight|default:"-" }}</span></div>
+        <div class="col-12"><label class="text-muted d-block">Address</label><span>{{ profile.address|default:"-" }}</span></div>
+      </div>
     </div>
-    {% endif %}
   </div>
 </div>
 {% endblock %}

@@ -1,11 +1,38 @@
-{% comment %}This template is included in base.html when the user is authenticated. It loads the voice listener that will fetch the registered phrase and start recognition.{% endcomment %}
-<div id="voice-listener" data-enabled="true"></div>
-<script src="/static/js/voice.js"></script>
-<script>
-  // Initialize the voice listener script with the endpoint paths
-  window.VOICE_CONFIG = window.VOICE_CONFIG || {};
-  window.VOICE_CONFIG.getCommandUrl = '{% url "voice:get_command" %}';
-  window.VOICE_CONFIG.triggerSosUrl = '{% url "sos:trigger_sos" %}';
-  window.VOICE_CONFIG.sosPageUrl = '{% url "sos:sos_page" %}';
-  window.VOICE_CONFIG.listen = {{ user.is_authenticated|yesno:"true,false" }};
-</script>
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Voice Messages{% endblock %}
+{% block content %}
+<h3 class="mb-3"><i class="bi bi-mic"></i> Voice Messages</h3>
+
+<div class="se-card p-4 mb-4">
+  <h6>Record a New Voice Message</h6>
+  <div class="d-flex align-items-center gap-2 my-3">
+    <button id="startRec" class="btn btn-danger"><i class="bi bi-record-circle"></i> Start</button>
+    <button id="stopRec" class="btn btn-primary" disabled>Stop & Save</button>
+    <span id="recTimer" class="ms-2">00:00</span>
+    <span id="recWave" style="display:none"><span class="voice-wave"></span><span class="voice-wave"></span><span class="voice-wave"></span><span class="voice-wave"></span></span>
+  </div>
+  <audio id="audioPreview" controls style="display:none;width:100%"></audio>
+</div>
+
+<div class="se-card p-4">
+  <h6>Saved Voice Messages</h6>
+  {% if voice_messages %}
+  <ul class="list-group list-group-flush">
+    {% for vm in voice_messages %}
+    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+      <div>
+        <small class="text-muted">{{ vm.created_at|date:"M d, H:i" }}</small>
+        <audio controls class="d-block mt-1" style="max-width:320px"><source src="{{ vm.audio_file.url }}"></audio>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted mb-0">No voice messages saved yet.</p>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script src="{% static 'js/voice.js' %}"></script>
+{% endblock %}

@@ -1,104 +1,78 @@
-import os
-from twilio.rest import Client
+"""
+Notification services: Twilio SMS + email alerts for SOS events.
+"""
 from django.conf import settings
+from django.core.mail import send_mail
 from django.utils import timezone
-from .models import SMSNotification
 
-TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
-TWILIO_FROM = os.getenv('TWILIO_FROM')
+from .models import NotificationLog
 
 
-def get_twilio_client():
-    if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN:
-        return None
-    return Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+def _build_alert_message(sos_event, recipient_name=""):
+    user = sos_event.user
+    profile = getattr(user, "profile", None)
+    full_name = profile.full_name if profile and profile.full_name else user.get_username()
+    location = sos_event.location_url or "Location unavailable"
+    return (
+        f"EMERGENCY ALERT: {full_name} has triggered an SOS. "
+        f"Live location: {location}. "
+        f"Video: {sos_event.video_room_url or 'unavailable'}. "
+        f"Time: {sos_event.triggered_at:%Y-%m-%d %H:%M}. "
+        f"Please respond immediately."
+    )
 
 
-def _send_sms_via_twilio(to, body):
-    client = get_twilio_client()
-    if not client:
-        return {'error': 'Twilio not configured'}
+def send_single_sms(to_number, body):
+    """Send an SMS via Twilio. Returns (ok, error)."""
+    if not (settings.TWILIO_ACCOUNT_SID and settings.TWILIO_AUTH_TOKEN and settings.TWILIO_FROM_NUMBER):
+        return False, "Twilio not configured"
     try:
-        message = client.messages.create(
-            body=body,
-            from_=TWILIO_FROM,
-            to=to,
-        )
-        return {'sid': getattr(message, 'sid', None), 'status': getattr(message, 'status', 'sent')}
+        from twilio.rest import Client
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        message = client.messages.create(body=body, from_=settings.TWILIO_FROM_NUMBER, to=to_number)
+        return True, message.sid
     except Exception as e:
-        return {'error': str(e)}
+        return False, str(e)
 
 
-def send_notifications_for_sos(sos_event):
-    """
-    Send initial SMS notifications to all user's emergency contacts for the SosEvent.
-    Returns list of SMSNotification instances.
-    """
-    user = sos_event.user
-    contacts = user.emergency_contacts.all()
-    results = []
-    # build location URL if available
-    loc_text = ''
-    if sos_event.latitude and sos_event.longitude:
-        loc_text = f"Location: https://www.google.com/maps/search/?api=1&query={sos_event.latitude},{sos_event.longitude}\n"
-
-    message_text = sos_event.message or 'SOS'
-    base_msg = f"EMERGENCY from {user.username}\n{message_text}\n{loc_text}"
-
-    for c in contacts:
-        to = c.phone
-        message = base_msg + f"\nContact: {c.name}"
-        notif = SMSNotification.objects.create(
-            sos_event=sos_event,
-            contact=c,
-            to_number=to,
-            message=message,
-            status='queued'
+def send_sos_sms_alerts(sos_event):
+    """Send SMS to all trusted contacts snapshot in the SOS event."""
+    body = _build_alert_message(sos_event)
+    sent, failed = 0, 0
+    for contact in sos_event.notified_contacts.all():
+        ok, info = send_single_sms(contact.mobile_number, body)
+        contact.sms_sent = ok
+        contact.sms_error = "" if ok else info
+        contact.save()
+        NotificationLog.objects.create(
+            user=sos_event.user,
+            channel="sms",
+            recipient=contact.mobile_number,
+            body=body,
+            status="sent" if ok else "failed",
+            error="" if ok else info,
         )
-        # attempt to send
-        sent = _send_sms_via_twilio(to, message)
-        if sent.get('error'):
-            notif.status = 'failed'
-            notif.response = sent.get('error')
-        else:
-            notif.twilio_sid = sent.get('sid')
-            notif.status = sent.get('status') or 'sent'
-            notif.sent_at = timezone.now()
-            notif.response = str(sent)
-        notif.save()
-        results.append(notif)
-    return results
+        sent += 1 if ok else 0
+        failed += 0 if ok else 1
+    if failed and not sent:
+        return "failed: all"
+    if failed:
+        return f"partial: {sent} sent, {failed} failed"
+    return f"sent: {sent} contacts"
 
 
-def send_location_update(sos_event, lat, lon):
-    """
-    Send location update SMS to all contacts. Creates SMSNotification records.
-    """
-    user = sos_event.user
-    contacts = user.emergency_contacts.all()
-    results = []
-    loc_text = f"Updated location: https://www.google.com/maps/search/?api=1&query={lat},{lon}\n"
-    base_msg = f"EMERGENCY UPDATE from {user.username}\n{loc_text}"
-    for c in contacts:
-        to = c.phone
-        message = base_msg + f"Contact: {c.name}"
-        notif = SMSNotification.objects.create(
-            sos_event=sos_event,
-            contact=c,
-            to_number=to,
-            message=message,
-            status='queued'
+def send_sos_email_alerts(sos_event):
+    """Send an email alert to the user's own email (and could be extended to contacts)."""
+    subject = f"EMERGENCY SOS Alert - {sos_event.user.email}"
+    body = _build_alert_message(sos_event)
+    try:
+        send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [sos_event.user.email], fail_silently=True)
+        NotificationLog.objects.create(
+            user=sos_event.user, channel="email", recipient=sos_event.user.email,
+            subject=subject, body=body, status="sent",
         )
-        sent = _send_sms_via_twilio(to, message)
-        if sent.get('error'):
-            notif.status = 'failed'
-            notif.response = sent.get('error')
-        else:
-            notif.twilio_sid = sent.get('sid')
-            notif.status = sent.get('status') or 'sent'
-            notif.sent_at = timezone.now()
-            notif.response = str(sent)
-        notif.save()
-        results.append(notif)
-    return results
+    except Exception as e:
+        NotificationLog.objects.create(
+            user=sos_event.user, channel="email", recipient=sos_event.user.email,
+            subject=subject, body=body, status="failed", error=str(e),
+        )

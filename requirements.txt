@@ -1,5 +1,5 @@
-Django>=4.2
-Pillow
-requests
-twilio
-reportlab
+Django>=4.2,<5.0
+djangorestframework>=3.14
+requests>=2.31
+twilio>=8.10
+Pillow>=10.0
