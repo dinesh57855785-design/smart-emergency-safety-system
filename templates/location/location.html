@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Live Location{% endblock %}
+{% block content %}
+<h2>Share Live Location</h2>
+<p>Press Start to begin sending your location to the server every 10 seconds.</p>
+<button id="startBtn" class="btn btn-success">Start</button>
+<button id="stopBtn" class="btn btn-secondary">Stop</button>
+<div id="locStatus" class="mt-3"></div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/location.js"></script>
+{% endblock %}

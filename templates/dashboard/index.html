@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1>Welcome, {{ user.username }}</h1>
+<p>This is a minimal admin dashboard. Use Django admin for more control.</p>
+<div class="row">
+  <div class="col-md-4">
+    <a class="btn btn-outline-primary" href="{% url 'profiles:view_profile' %}">My Profile</a>
+  </div>
+  <div class="col-md-4">
+    <a class="btn btn-outline-danger" href="{% url 'sos:sos_page' %}">Send SOS</a>
+  </div>
+  <div class="col-md-4">
+    <a class="btn btn-outline-success" href="{% url 'location:live_location' %}">Share Location</a>
+  </div>
+</div>
+{% endblock %}
