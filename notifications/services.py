@@ -25,7 +25,7 @@ def _send_sms_via_twilio(to, body):
             from_=TWILIO_FROM,
             to=to,
         )
-        return {'sid': message.sid, 'status': message.status}
+        return {'sid': getattr(message, 'sid', None), 'status': getattr(message, 'status', 'sent')}
     except Exception as e:
         return {'error': str(e)}
 
@@ -43,8 +43,8 @@ def send_notifications_for_sos(sos_event):
     if sos_event.latitude and sos_event.longitude:
         loc_text = f"Location: https://www.google.com/maps/search/?api=1&query={sos_event.latitude},{sos_event.longitude}\n"
 
-    base_msg = f"EMERGENCY from {user.username}\n{(sos_event.message or 'SOS')}
-{loc_text}"
+    message_text = sos_event.message or 'SOS'
+    base_msg = f"EMERGENCY from {user.username}\n{message_text}\n{loc_text}"
 
     for c in contacts:
         to = c.phone
