@@ -1,9 +1,8 @@
-# add notifications to INSTALLED_APPS
 @@
-     'contacts',
      'sos',
      'location',
      'voice',
-+    'notifications',
+     'notifications',
++    'police',
      'dashboard',
  ]

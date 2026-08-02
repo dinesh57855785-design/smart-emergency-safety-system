@@ -32,4 +32,21 @@
   </tbody>
 </table>
 
+<h3>Recent Police Notifications</h3>
+<table class="table table-sm">
+  <thead><tr><th>Station</th><th>Status</th><th>Notified At</th><th>Details</th></tr></thead>
+  <tbody>
+    {% for p in police_notifications %}
+    <tr>
+      <td>{{ p.police_station.name if p.police_station else 'Unknown' }}</td>
+      <td>{{ p.get_status_display }}</td>
+      <td>{{ p.notified_at }}</td>
+      <td>{{ p.payload|truncatechars:80 }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4">No police notifications yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
 {% endblock %}
