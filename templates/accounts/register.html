@@ -1,26 +1,117 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Register{% endblock %}
+{% block extra_head %}
+<link href="{% static 'css/face_auth.css' %}" rel="stylesheet">
+{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-6 col-lg-5">
-    <div class="se-card p-4 p-md-5">
-      <h3 class="text-center mb-1"><i class="bi bi-shield-fill-check text-primary"></i> Smart Emergency</h3>
-      <p class="text-center text-muted mb-4">Create your account</p>
-      <form method="post">
-        {% csrf_token %}
-        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
-        {% for field in form %}
-          <div class="mb-3">
-            <label class="form-label">{{ field.label }}</label>
-            {{ field }}
-            {% if field.help_text %}<small class="text-muted d-block">{{ field.help_text }}</small>{% endif %}
-            {% for error in field.errors %}<small class="text-danger d-block">{{ error }}</small>{% endfor %}
+<div class="se-auth-wrapper">
+  <!-- Left brand panel -->
+  <div class="se-auth-brand se-auth-brand-register">
+    <div class="se-auth-brand-inner">
+      <div class="se-auth-logo">
+        <i class="bi bi-shield-fill-check"></i>
+      </div>
+      <h1>Join the<br>Smart Emergency Network</h1>
+      <p class="se-auth-tagline">Create your account to access SOS alerts, live video calls, voice assistance, and emergency contacts — all in one place.</p>
+      <ul class="se-auth-features">
+        <li><i class="bi bi-check-circle-fill"></i> Free account setup</li>
+        <li><i class="bi bi-check-circle-fill"></i> Face recognition support</li>
+        <li><i class="bi bi-check-circle-fill"></i> Emergency contact management</li>
+        <li><i class="bi bi-check-circle-fill"></i> Live location &amp; video calls</li>
+      </ul>
+    </div>
+    <div class="se-auth-brand-footer">
+      <small>&copy; 2024 Smart Emergency System</small>
+    </div>
+  </div>
+
+  <!-- Right form panel -->
+  <div class="se-auth-form-side">
+    <div class="se-auth-card">
+      <div class="se-auth-tabs">
+        <button class="se-auth-tab active" data-tab="details">
+          <i class="bi bi-pencil-fill"></i> Your Details
+        </button>
+        <button class="se-auth-tab" data-tab="face" id="tabFaceCapture">
+          <i class="bi bi-person-bounding-box"></i> Face Capture
+        </button>
+      </div>
+
+      <!-- Step 1: Details -->
+      <div class="se-auth-panel active" id="panel-details">
+        <h2>Create your account</h2>
+        <p class="se-auth-subtitle">Fill in your details to get started</p>
+        <form method="post" id="registerForm">
+          {% csrf_token %}
+          {% if form.non_field_errors %}<div class="se-auth-error">{{ form.non_field_errors }}</div>{% endif %}
+          <div class="se-field">
+            <label><i class="bi bi-person"></i> Username</label>
+            <input type="text" name="username" placeholder="Choose a username" required value="{{ form.username.value|default:'' }}">
+            {% for error in form.username.errors %}<small class="se-field-error">{{ error }}</small>{% endfor %}
           </div>
-        {% endfor %}
-        <button type="submit" class="btn btn-primary w-100 py-2">Create Account</button>
-      </form>
-      <p class="text-center mt-3 mb-0"><small>Already have an account? <a href="{% url 'accounts:login' %}">Log in</a></small></p>
+          <div class="se-field">
+            <label><i class="bi bi-envelope"></i> Email</label>
+            <input type="email" name="email" placeholder="you@example.com" required value="{{ form.email.value|default:'' }}">
+            {% for error in form.email.errors %}<small class="se-field-error">{{ error }}</small>{% endfor %}
+          </div>
+          <div class="se-field">
+            <label><i class="bi bi-telephone"></i> Mobile Number (optional)</label>
+            <input type="text" name="phone" placeholder="+1 555 000 0000" value="{{ form.phone.value|default:'' }}">
+          </div>
+          <div class="se-field">
+            <label><i class="bi bi-lock"></i> Password</label>
+            <input type="password" name="password1" placeholder="Create a password" required>
+            {% for error in form.password1.errors %}<small class="se-field-error">{{ error }}</small>{% endfor %}
+          </div>
+          <div class="se-field">
+            <label><i class="bi bi-lock-fill"></i> Confirm Password</label>
+            <input type="password" name="password2" placeholder="Repeat password" required>
+            {% for error in form.password2.errors %}<small class="se-field-error">{{ error }}</small>{% endfor %}
+          </div>
+          <button type="submit" class="se-auth-btn">
+            <i class="bi bi-person-plus-fill"></i> Create Account
+          </button>
+        </form>
+        <div class="se-auth-links">
+          <a href="{% url 'accounts:login' %}"><i class="bi bi-box-arrow-in-right"></i> Already have an account? Log in</a>
+        </div>
+      </div>
+
+      <!-- Step 2: Face capture (shown after registration) -->
+      <div class="se-auth-panel" id="panel-face">
+        <h2>Capture Your Face</h2>
+        <p class="se-auth-subtitle">Enable face login — look at the camera and capture</p>
+        <div class="se-face-container">
+          <div class="se-face-video-wrap" id="faceVideoWrap">
+            <video id="faceVideo" autoplay muted playsinline></video>
+            <canvas id="faceCanvas"></canvas>
+            <div class="se-face-overlay" id="faceOverlay">
+              <div class="se-face-scanner"></div>
+            </div>
+            <div class="se-face-placeholder" id="facePlaceholder">
+              <i class="bi bi-camera-video-off"></i>
+              <p>Click "Start Camera" to begin</p>
+            </div>
+          </div>
+          <div class="se-face-status" id="faceStatus">Ready</div>
+          <div class="se-face-controls">
+            <button class="se-auth-btn se-face-btn-start" id="btnStartFace">
+              <i class="bi bi-camera-video-fill"></i> Start Camera
+            </button>
+            <button class="se-auth-btn se-face-btn-scan" id="btnScanFace" disabled>
+              <i class="bi bi-camera-fill"></i> Capture Face
+            </button>
+          </div>
+        </div>
+        <div class="se-auth-links">
+          <a href="{% url 'accounts:login' %}"><i class="bi bi-box-arrow-in-right"></i> Skip &amp; go to login</a>
+        </div>
+      </div>
     </div>
   </div>
 </div>
+{% endblock %}
+{% block extra_scripts %}
+<script src="{% static 'js/face_auth.js' %}"></script>
 {% endblock %}

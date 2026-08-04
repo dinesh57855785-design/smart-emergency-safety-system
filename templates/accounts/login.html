@@ -1,28 +1,103 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Login{% endblock %}
+{% block extra_head %}
+<link href="{% static 'css/face_auth.css' %}" rel="stylesheet">
+{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-5 col-lg-4">
-    <div class="se-card p-4 p-md-5">
-      <h3 class="text-center mb-1"><i class="bi bi-shield-fill-check text-primary"></i> Smart Emergency</h3>
-      <p class="text-center text-muted mb-4">Sign in to your account</p>
-      <form method="post">
-        {% csrf_token %}
-        <div class="mb-3">
-          <label class="form-label">Email</label>
-          <input type="email" name="email" class="form-control" required autofocus>
+<div class="se-auth-wrapper">
+  <!-- Left brand panel -->
+  <div class="se-auth-brand">
+    <div class="se-auth-brand-inner">
+      <div class="se-auth-logo">
+        <i class="bi bi-shield-fill-check"></i>
+      </div>
+      <h1>Smart Emergency<br>Safety System</h1>
+      <p class="se-auth-tagline">Protecting lives with technology — sign in to access your emergency dashboard, SOS, live video calls, and more.</p>
+      <ul class="se-auth-features">
+        <li><i class="bi bi-check-circle-fill"></i> One-tap SOS alerts</li>
+        <li><i class="bi bi-check-circle-fill"></i> Live video calling</li>
+        <li><i class="bi bi-check-circle-fill"></i> Face recognition login</li>
+        <li><i class="bi bi-check-circle-fill"></i> Real-time location tracking</li>
+      </ul>
+    </div>
+    <div class="se-auth-brand-footer">
+      <small>&copy; 2024 Smart Emergency System</small>
+    </div>
+  </div>
+
+  <!-- Right form panel -->
+  <div class="se-auth-form-side">
+    <div class="se-auth-card">
+      <!-- Tab switcher -->
+      <div class="se-auth-tabs">
+        <button class="se-auth-tab active" data-tab="password">
+          <i class="bi bi-key-fill"></i> Password
+        </button>
+        <button class="se-auth-tab" data-tab="face">
+          <i class="bi bi-person-bounding-box"></i> Face Login
+        </button>
+      </div>
+
+      <!-- Password login -->
+      <div class="se-auth-panel active" id="panel-password">
+        <h2>Welcome back</h2>
+        <p class="se-auth-subtitle">Sign in to your account</p>
+        <form method="post">
+          {% csrf_token %}
+          <div class="se-field">
+            <label><i class="bi bi-envelope"></i> Email</label>
+            <input type="email" name="email" placeholder="you@example.com" required autofocus>
+          </div>
+          <div class="se-field">
+            <label><i class="bi bi-lock"></i> Password</label>
+            <input type="password" name="password" placeholder="Enter password" required>
+          </div>
+          <button type="submit" class="se-auth-btn">
+            <i class="bi bi-box-arrow-in-right"></i> Log In
+          </button>
+        </form>
+        <div class="se-auth-links">
+          <a href="{% url 'accounts:register' %}"><i class="bi bi-person-plus"></i> Create account</a>
+          <a href="{% url 'accounts:password_reset' %}"><i class="bi bi-question-circle"></i> Forgot password?</a>
         </div>
-        <div class="mb-3">
-          <label class="form-label">Password</label>
-          <input type="password" name="password" class="form-control" required>
+      </div>
+
+      <!-- Face login -->
+      <div class="se-auth-panel" id="panel-face">
+        <h2>Face Recognition</h2>
+        <p class="se-auth-subtitle">Look at the camera to sign in</p>
+        <div class="se-face-container">
+          <div class="se-face-video-wrap" id="faceVideoWrap">
+            <video id="faceVideo" autoplay muted playsinline></video>
+            <canvas id="faceCanvas"></canvas>
+            <div class="se-face-overlay" id="faceOverlay">
+              <div class="se-face-scanner"></div>
+            </div>
+            <div class="se-face-placeholder" id="facePlaceholder">
+              <i class="bi bi-camera-video-off"></i>
+              <p>Click "Start Camera" to begin</p>
+            </div>
+          </div>
+          <div class="se-face-status" id="faceStatus">Ready</div>
+          <div class="se-face-controls">
+            <button class="se-auth-btn se-face-btn-start" id="btnStartFace">
+              <i class="bi bi-camera-video-fill"></i> Start Camera
+            </button>
+            <button class="se-auth-btn se-face-btn-scan" id="btnScanFace" disabled>
+              <i class="bi bi-person-check-fill"></i> Scan &amp; Login
+            </button>
+          </div>
         </div>
-        <button type="submit" class="btn btn-primary w-100 py-2">Log In</button>
-      </form>
-      <div class="d-flex justify-content-between mt-3">
-        <a href="{% url 'accounts:register' %}"><small>Create account</small></a>
-        <a href="{% url 'accounts:password_reset' %}"><small>Forgot password?</small></a>
+        <div class="se-auth-links">
+          <a href="{% url 'accounts:register' %}"><i class="bi bi-person-plus"></i> Create account</a>
+          <a href="{% url 'accounts:password_reset' %}"><i class="bi bi-question-circle"></i> Forgot password?</a>
+        </div>
       </div>
     </div>
   </div>
 </div>
+{% endblock %}
+{% block extra_scripts %}
+<script src="{% static 'js/face_auth.js' %}"></script>
 {% endblock %}

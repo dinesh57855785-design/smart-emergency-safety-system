@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "notifications",
     "reports",
     "dashboard",
+    "face_auth",
 ]
 
 MIDDLEWARE = [

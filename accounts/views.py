@@ -24,11 +24,13 @@ def register(request):
             user.is_email_verified = False
             user.save()
             _send_verification_email(request, user)
+            # Auto-login so the user can immediately capture their face.
+            login(request, user, backend="django.contrib.auth.backends.ModelBackend")
             messages.success(
                 request,
-                "Account created. Please check your email to verify your account.",
+                "Account created. You can now capture your face for face login.",
             )
-            return redirect("accounts:login")
+            return redirect("/accounts/register/?face=1")
     else:
         form = SignUpForm()
     return render(request, "accounts/register.html", {"form": form})

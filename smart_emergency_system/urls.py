@@ -18,5 +18,6 @@ urlpatterns = [
     path("notifications/", include("notifications.urls")),
     path("reports/", include("reports.urls")),
     path("dashboard/", include("dashboard.urls")),
+    path("face-auth/", include("face_auth.urls")),
     path("", RedirectView.as_view(url="/dashboard/", permanent=False)),
 ]
